@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Timetable</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+<body>
+    <h2>Teacher Timetable Management</h2>
+    
+    <form method="POST">
+        <label>Enter Teacher Name:</label>
+        <input type="text" name="teacher_name" required>
+        
+        <label>Select Day:</label>
+        <select name="day" required>
+            <option value="" selected disabled>Select Day</option>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+        </select>
+
+        <button type="submit">Get Timetable</button>
+    </form>
+
+    {% if schedule %}
+        <h3>Timetable for {{ teacher_name }} on {{ day_selected }}</h3>
+        <ul id="schedule_list">
+            {% for entry in schedule %}
+                <li>{{ entry.time }} - {{ entry.class }}</li>
+            {% endfor %}
+        </ul>
+        <button id="downloadBtn">Download PDF</button>
+    {% elif teacher_name %}
+        <p>No schedule found for {{ teacher_name }} on {{ day_selected }}</p>
+    {% endif %}
+
+    
+
+
+    <script>
+       document.addEventListener("DOMContentLoaded", function () {
+    const { jsPDF } = window.jspdf;
+    
+    const downloadBtn = document.getElementById("downloadBtn");
+    if (!downloadBtn) return; // Prevent errors if the button is not rendered
+
+    downloadBtn.addEventListener("click", function () {
+        const doc = new jsPDF();
+
+        // Fetch teacher name and day from Jinja-rendered elements
+        const teacherName = "{{ teacher_name }}" || "Unknown";
+        const daySelected = "{{ day_selected }}" || "Unknown";
+
+        let content = `Teacher Timetable\nTeacher: ${teacherName}\nDay: ${daySelected}\n\n`;
+
+        let scheduleList = document.getElementById("schedule_list");
+        if (scheduleList) {
+            let scheduleItems = scheduleList.getElementsByTagName("li");
+            if (scheduleItems.length > 0) {
+                for (let i = 0; i < scheduleItems.length; i++) {
+                    content += `${i + 1}. ${scheduleItems[i].innerText}\n`;
+                }
+            } else {
+                content += "No schedule available.";
+            }
+        } else {
+            content += "No schedule available.";
+        }
+
+        doc.text(content, 10, 10);
+        doc.save(`${teacherName}_Timetable.pdf`);
+    });
+});
+
+    </script>
+</body>
+</html>
+
+
+  
